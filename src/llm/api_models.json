@@ -28,5 +28,20 @@
     "display_name": "Gemini 3.1 Pro",
     "model_name": "gemini-3.1-pro-preview",
     "provider": "Google"
+  },
+  {
+    "display_name": "Groq: Llama 3.3 70B (fast, free)",
+    "model_name": "llama-3.3-70b-versatile",
+    "provider": "Groq"
+  },
+  {
+    "display_name": "Groq: Llama 3.1 70B",
+    "model_name": "llama-3.1-70b-versatile",
+    "provider": "Groq"
+  },
+  {
+    "display_name": "Groq: Llama 3.1 8B (fastest)",
+    "model_name": "llama-3.1-8b-instant",
+    "provider": "Groq"
   }
 ]
