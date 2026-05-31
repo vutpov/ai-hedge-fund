@@ -4,6 +4,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from app.backend.database.models import ApiKey
+from app.backend.security.api_key_crypto import decrypt_api_key, encrypt_api_key
 
 
 class ApiKeyRepository:
@@ -25,7 +26,7 @@ class ApiKeyRepository:
         
         if existing_key:
             # Update existing key
-            existing_key.key_value = key_value
+            existing_key.key_value = encrypt_api_key(key_value)
             existing_key.description = description
             existing_key.is_active = is_active
             existing_key.updated_at = func.now()
@@ -36,7 +37,7 @@ class ApiKeyRepository:
             # Create new key
             api_key = ApiKey(
                 provider=provider,
-                key_value=key_value,
+                key_value=encrypt_api_key(key_value),
                 description=description,
                 is_active=is_active
             )
@@ -51,6 +52,19 @@ class ApiKeyRepository:
             ApiKey.provider == provider,
             ApiKey.is_active == True
         ).first()
+
+    def get_api_key_record(self, provider: str) -> Optional[ApiKey]:
+        return self.db.query(ApiKey).filter(ApiKey.provider == provider).first()
+
+    def get_decrypted_api_key(self, provider: str) -> Optional[str]:
+        api_key = self.get_api_key_by_provider(provider)
+        if not api_key:
+            return None
+        plaintext = decrypt_api_key(api_key.key_value)
+        if not api_key.key_value.startswith("enc:v1:"):
+            api_key.key_value = encrypt_api_key(plaintext)
+            self.db.commit()
+        return plaintext
 
     def get_all_api_keys(self, include_inactive: bool = False) -> List[ApiKey]:
         """Get all API keys"""
@@ -72,7 +86,7 @@ class ApiKeyRepository:
             return None
 
         if key_value is not None:
-            api_key.key_value = key_value
+            api_key.key_value = encrypt_api_key(key_value)
         if description is not None:
             api_key.description = description
         if is_active is not None:
@@ -128,4 +142,4 @@ class ApiKeyRepository:
                 is_active=data.get('is_active', True)
             )
             results.append(api_key)
-        return results 
+        return results

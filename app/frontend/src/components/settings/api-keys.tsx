@@ -99,15 +99,9 @@ export function ApiKeysSettings() {
       setError(null);
       const apiKeysSummary = await apiKeysService.getAllApiKeys();
       
-      // Load actual key values for existing keys
       const keysData: Record<string, string> = {};
       for (const summary of apiKeysSummary) {
-        try {
-          const fullKey = await apiKeysService.getApiKey(summary.provider);
-          keysData[summary.provider] = fullKey.key_value;
-        } catch (err) {
-          console.warn(`Failed to load key for ${summary.provider}:`, err);
-        }
+        keysData[summary.provider] = '';
       }
       
       setApiKeys(keysData);
@@ -316,4 +310,4 @@ export function ApiKeysSettings() {
       </Card>
     </div>
   );
-} 
+}

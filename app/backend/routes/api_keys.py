@@ -7,7 +7,6 @@ from app.backend.repositories.api_key_repository import ApiKeyRepository
 from app.backend.models.schemas import (
     ApiKeyCreateRequest,
     ApiKeyUpdateRequest,
-    ApiKeyResponse,
     ApiKeySummaryResponse,
     ApiKeyBulkUpdateRequest,
     ErrorResponse
@@ -18,7 +17,7 @@ router = APIRouter(prefix="/api-keys", tags=["api-keys"])
 
 @router.post(
     "/",
-    response_model=ApiKeyResponse,
+    response_model=ApiKeySummaryResponse,
     responses={
         400: {"model": ErrorResponse, "description": "Invalid request"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
@@ -34,7 +33,7 @@ async def create_or_update_api_key(request: ApiKeyCreateRequest, db: Session = D
             description=request.description,
             is_active=request.is_active
         )
-        return ApiKeyResponse.from_orm(api_key)
+        return ApiKeySummaryResponse.from_orm(api_key)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create/update API key: {str(e)}")
 
@@ -56,31 +55,9 @@ async def get_api_keys(include_inactive: bool = False, db: Session = Depends(get
         raise HTTPException(status_code=500, detail=f"Failed to retrieve API keys: {str(e)}")
 
 
-@router.get(
-    "/{provider}",
-    response_model=ApiKeyResponse,
-    responses={
-        404: {"model": ErrorResponse, "description": "API key not found"},
-        500: {"model": ErrorResponse, "description": "Internal server error"},
-    },
-)
-async def get_api_key(provider: str, db: Session = Depends(get_db)):
-    """Get a specific API key by provider"""
-    try:
-        repo = ApiKeyRepository(db)
-        api_key = repo.get_api_key_by_provider(provider)
-        if not api_key:
-            raise HTTPException(status_code=404, detail="API key not found")
-        return ApiKeyResponse.from_orm(api_key)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve API key: {str(e)}")
-
-
 @router.put(
     "/{provider}",
-    response_model=ApiKeyResponse,
+    response_model=ApiKeySummaryResponse,
     responses={
         404: {"model": ErrorResponse, "description": "API key not found"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
@@ -98,7 +75,7 @@ async def update_api_key(provider: str, request: ApiKeyUpdateRequest, db: Sessio
         )
         if not api_key:
             raise HTTPException(status_code=404, detail="API key not found")
-        return ApiKeyResponse.from_orm(api_key)
+        return ApiKeySummaryResponse.from_orm(api_key)
     except HTTPException:
         raise
     except Exception as e:
@@ -144,7 +121,7 @@ async def deactivate_api_key(provider: str, db: Session = Depends(get_db)):
             raise HTTPException(status_code=404, detail="API key not found")
         
         # Return the updated key
-        api_key = repo.get_api_key_by_provider(provider)
+        api_key = repo.get_api_key_record(provider)
         return ApiKeySummaryResponse.from_orm(api_key)
     except HTTPException:
         raise
@@ -154,7 +131,7 @@ async def deactivate_api_key(provider: str, db: Session = Depends(get_db)):
 
 @router.post(
     "/bulk",
-    response_model=List[ApiKeyResponse],
+    response_model=List[ApiKeySummaryResponse],
     responses={
         400: {"model": ErrorResponse, "description": "Invalid request"},
         500: {"model": ErrorResponse, "description": "Internal server error"},
@@ -174,7 +151,7 @@ async def bulk_update_api_keys(request: ApiKeyBulkUpdateRequest, db: Session = D
             for key in request.api_keys
         ]
         api_keys = repo.bulk_create_or_update(api_keys_data)
-        return [ApiKeyResponse.from_orm(key) for key in api_keys]
+        return [ApiKeySummaryResponse.from_orm(key) for key in api_keys]
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to bulk update API keys: {str(e)}")
 
@@ -198,4 +175,4 @@ async def update_last_used(provider: str, db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to update last used timestamp: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Failed to update last used timestamp: {str(e)}")

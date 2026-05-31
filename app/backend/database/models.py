@@ -104,7 +104,7 @@ class ApiKey(Base):
     
     # API key details
     provider = Column(String(100), nullable=False, unique=True, index=True)  # e.g., "ANTHROPIC_API_KEY"
-    key_value = Column(Text, nullable=False)  # The actual API key (encrypted in production)
+    key_value = Column(Text, nullable=False)  # Encrypted API key ciphertext
     is_active = Column(Boolean, default=True)  # Enable/disable without deletion
     
     # Optional metadata
@@ -112,4 +112,3 @@ class ApiKey(Base):
     last_used = Column(DateTime(timezone=True), nullable=True)  # Track usage
 
 
- 

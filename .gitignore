@@ -64,6 +64,7 @@ outputs/
 *.db-shm
 *.sqlite
 *.sqlite3
+app/backend/.api_key_encryption.key
 
 # Alembic (keep migration files, but ignore generated/cache files)
 app/backend/alembic/versions/__pycache__/
